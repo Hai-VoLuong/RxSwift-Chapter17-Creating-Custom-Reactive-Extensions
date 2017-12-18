@@ -1,0 +1,2 @@
+# RxSwift-Chapter17-Creating-Custom-Reactive-Extensions
+In this chapter, you will create an extension to NSURLSession to manage the communication with an endpoint, as well as managing the cache and other things which are commonly part of a regular application. This is example is pedagogical; if you want to use RxSwift with networking, there are several libraries available to do this for you, including RxAlamofire, which we also cover in this book.
