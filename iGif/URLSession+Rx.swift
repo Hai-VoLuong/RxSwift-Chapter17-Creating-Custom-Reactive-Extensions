@@ -37,6 +37,16 @@ public enum RxURLSessionError: Error {
   case deserializationFailed
 }
 
+extension ObservableType where E == (HTTPURLResponse, Data) {
+    func cache() -> Observable<E> {
+        return self.do(onNext: { (response, data) in
+            if let url = response.url?.absoluteString, 200 ..< 300 ~= response.statusCode {
+                internalCache[url] = data
+            }
+        })
+    }
+}
+
 extension Reactive where Base: URLSession {
     func response(request: URLRequest) -> Observable<(HTTPURLResponse, Data)> {
         return Observable.create { observer in
@@ -81,26 +91,25 @@ extension Reactive where Base: URLSession {
 
     func json(request: URLRequest) -> Observable<JSON> {
         return data(request: request).map { d in
-            return try JSON(data: d)
+            let json = try JSON(data: d)
+            if json.object is NSNull {
+                throw RxURLSessionError.deserializationFailed
+            }
+            return json
         }
     }
 
     func image(request: URLRequest) -> Observable<UIImage> {
         return data(request: request).map { d in
-            return UIImage(data: d) ?? UIImage()
+            if let image = UIImage(data: d) {
+                return image
+            } else {
+                throw RxURLSessionError.deserializationFailed
+            }
         }
     }
 }
 
-extension ObservableType where E == (HTTPURLResponse, Data) {
-    func cache() -> Observable<E> {
-        return self.do(onNext: { (response, data) in
-            if let url = response.url?.absoluteString, 200 ..< 300 ~= response.statusCode {
-                internalCache[url] = data
-            }
-        })
-    }
-}
 
 
 
